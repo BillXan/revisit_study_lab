@@ -210,6 +210,15 @@ export interface UIConfig {
   minHeightSize?: number;
   /** The path to the external stylesheet file. */
   stylesheetPath?: string;
+  /** Optional Lab Streaming Layer marker bridge configuration. Browser studies send marker JSON to this WebSocket URL, and the local bridge publishes it as an LSL marker stream. */
+  lsl?: {
+    /** Enables marker publishing for this study. Defaults to VITE_LSL_ENABLED when omitted. */
+    enabled?: boolean;
+    /** WebSocket URL for the local LSL bridge. Defaults to VITE_LSL_WS_URL or ws://127.0.0.1:8765. */
+    url?: string;
+    /** Milliseconds to wait before reconnecting to the bridge. Defaults to 2000. */
+    reconnectIntervalMs?: number;
+  };
 }
 
 /**

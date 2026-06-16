@@ -11,10 +11,13 @@ services:
         VITE_RECAPTCHAV3TOKEN: ${VITE_RECAPTCHAV3TOKEN:-}
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
         VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+        VITE_LSL_ENABLED: ${VITE_LSL_ENABLED:-false}
+        VITE_LSL_WS_URL: ${VITE_LSL_WS_URL:-ws://127.0.0.1:8765}
     ports:
       - "0.0.0.0:${STUDY_HTTP_PORT:-8080}:80"
     depends_on:
       - haic-api
+      - lsl-bridge
     restart: unless-stopped
 
   haic-api:
@@ -22,4 +25,15 @@ services:
       context: ./services/haic_api
     env_file:
       .env.docker
+    restart: unless-stopped
+
+  lsl-bridge:
+    build:
+      context: ./services/lsl_bridge
+    environment:
+      LSL_STREAM_NAME: ${LSL_STREAM_NAME:-reVISit Markers}
+      LSL_STREAM_TYPE: ${LSL_STREAM_TYPE:-Markers}
+      LSL_SOURCE_ID: ${LSL_SOURCE_ID:-revisit-lsl-marker-stream}
+    ports:
+      - "127.0.0.1:${LSL_BRIDGE_PORT:-8765}:8765"
     restart: unless-stopped

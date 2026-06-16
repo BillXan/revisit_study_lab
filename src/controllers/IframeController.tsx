@@ -3,9 +3,10 @@ import {
 } from 'react';
 import { useDispatch } from 'react-redux';
 import { useCurrentComponent, useCurrentIdentifier } from '../routes/utils';
-import { useStoreDispatch, useStoreActions } from '../store/store';
+import { useStoreDispatch, useStoreActions, useStoreSelector } from '../store/store';
 import { ParticipantData, WebsiteComponent } from '../parser/types';
 import { PREFIX as BASE_PREFIX } from '../utils/Prefix';
+import { lslMarkerClient } from '../lsl/lslClient';
 
 const PREFIX = '@REVISIT_COMMS';
 
@@ -16,6 +17,9 @@ export function IframeController({ currentConfig, provState, answers }: { curren
   const storeDispatch = useStoreDispatch();
   const dispatch = useDispatch();
   const identifier = useCurrentIdentifier();
+  const participantId = useStoreSelector((state) => state.participantId);
+  const studyId = useStoreSelector((state) => state.studyId);
+  const storedAnswer = useStoreSelector((state) => state.answers[identifier]);
 
   const ref = useRef<HTMLIFrameElement>(null);
 
@@ -84,6 +88,19 @@ export function IframeController({ currentConfig, provState, answers }: { curren
               provenanceGraph: data.message,
             }));
             break;
+          case `${PREFIX}/EVENT`:
+            lslMarkerClient.send({
+              event: `iframe_${data.message?.eventName || 'event'}`,
+              studyId,
+              participantId,
+              component: currentComponent,
+              identifier,
+              trialOrder: storedAnswer?.trialOrder,
+              data: {
+                objectId: data.message?.objectId,
+              },
+            });
+            break;
           default:
             break;
         }
@@ -93,7 +110,7 @@ export function IframeController({ currentConfig, provState, answers }: { curren
     window.addEventListener('message', handler);
 
     return () => window.removeEventListener('message', handler);
-  }, [storeDispatch, dispatch, iframeId, currentConfig, sendMessage, setReactiveAnswers, updateResponseBlockValidation, identifier]);
+  }, [storeDispatch, dispatch, iframeId, currentConfig, sendMessage, setReactiveAnswers, updateResponseBlockValidation, identifier, studyId, participantId, currentComponent, storedAnswer?.trialOrder]);
 
   return (
     <iframe

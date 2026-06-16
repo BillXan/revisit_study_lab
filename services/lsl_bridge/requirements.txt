@@ -1,0 +1,2 @@
+pylsl==1.17.6
+websockets==15.0.1

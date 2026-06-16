@@ -22,6 +22,7 @@ import {
 } from '../../parser/types';
 import { decryptIndex, encryptIndex } from '../../utils/encryptDecryptIndex';
 import { useIsAnalysis } from './useIsAnalysis';
+import { lslMarkerClient } from '../../lsl/lslClient';
 
 function checkAllAnswersCorrect(answers: Record<string, Answer>, componentId: string, componentConfig: IndividualComponent | InheritedComponent, studyConfig: StudyConfig) {
   const componentName = componentId.slice(0, componentId.lastIndexOf('_'));
@@ -50,6 +51,7 @@ export function useNextStep() {
   const sequence = useStoreSelector((state) => state.sequence);
   const answers = useStoreSelector((state) => state.answers);
   const modes = useStoreSelector((state) => state.modes);
+  const participantId = useStoreSelector((state) => state.participantId);
   const studyConfig = useStudyConfig();
 
   const { funcIndex } = useParams();
@@ -128,6 +130,22 @@ export function useNextStep() {
       storeDispatch(setMatrixAnswersCheckbox(null));
       storeDispatch(setMatrixAnswersRadio(null));
     }
+
+    lslMarkerClient.send({
+      event: 'trial_end',
+      timestamp: endTime,
+      studyId,
+      participantId,
+      component: componentName,
+      identifier,
+      trialOrder: storedAnswer.trialOrder,
+      data: {
+        collectData,
+        durationMs: endTime - startTime,
+        timedOut: !collectData,
+        answerIds: Object.keys(answer),
+      },
+    });
 
     let nextStep = currentStep + 1;
 
@@ -215,7 +233,7 @@ export function useNextStep() {
     } else {
       navigate(`/${studyId}/${encryptIndex(nextStep)}${window.location.search}`);
     }
-  }, [currentStep, trialValidation, identifier, storedAnswer, windowEvents, dataCollectionEnabled, sequence, answers, startTime, funcIndex, navigate, studyId, storeDispatch, saveTrialAnswer, storageEngine, setReactiveAnswers, setMatrixAnswersCheckbox, setMatrixAnswersRadio, studyConfig, participantSequence]);
+  }, [currentStep, trialValidation, identifier, storedAnswer, windowEvents, dataCollectionEnabled, sequence, answers, startTime, funcIndex, navigate, studyId, participantId, storeDispatch, saveTrialAnswer, storageEngine, setReactiveAnswers, setMatrixAnswersCheckbox, setMatrixAnswersRadio, studyConfig, participantSequence]);
 
   return {
     isNextDisabled,

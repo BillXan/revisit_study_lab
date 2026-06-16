@@ -4,6 +4,8 @@ Create your own interactive, web-based data visualization user studies by clonin
 
 reVISit introduces reVISit.spec a DSL for specifying study setups (consent forms, training, trials, etc) for interactive web based studies. You describe your experimental setup in reVISit.spec, add your stimuli as images, forms, html pages, or React components, build and deploy – and you're ready to run your study. For tutorials and documentation, see the [reVISit website](https://revisit.dev). 
 
+This setup can also publish study markers to Lab Streaming Layer through an optional WebSocket bridge. See [services/lsl_bridge/README.md](services/lsl_bridge/README.md) for setup and marker payload details.
+
 ## Build Instructions
 
 To run this demo experiment locally, you will need to install node on your computer. 

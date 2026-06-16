@@ -2913,6 +2913,25 @@
           "description": "The path to the external stylesheet file.",
           "type": "string"
         },
+        "lsl": {
+          "additionalProperties": false,
+          "description": "Optional Lab Streaming Layer marker bridge configuration. Browser studies send marker JSON to this WebSocket URL, and the local bridge publishes it as an LSL marker stream.",
+          "properties": {
+            "enabled": {
+              "description": "Enables marker publishing for this study. Defaults to VITE_LSL_ENABLED when omitted.",
+              "type": "boolean"
+            },
+            "reconnectIntervalMs": {
+              "description": "Milliseconds to wait before reconnecting to the bridge. Defaults to 2000.",
+              "type": "number"
+            },
+            "url": {
+              "description": "WebSocket URL for the local LSL bridge. Defaults to VITE_LSL_WS_URL or ws://127.0.0.1:8765.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "timeoutReject": {
           "description": "Whether to redirect a timed out participant to a rejection page. This only works for components where the `nextButtonDisableTime` field is set.",
           "type": "boolean"

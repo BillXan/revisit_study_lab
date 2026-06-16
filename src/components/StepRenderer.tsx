@@ -15,20 +15,32 @@ import { useStoreSelector, useStoreDispatch, useStoreActions } from '../store/st
 import { AnalysisFooter } from './interface/AnalysisFooter';
 import { useIsAnalysis } from '../store/hooks/useIsAnalysis';
 import { studyComponentToIndividualComponent } from '../utils/handleComponentInheritance';
-import { useCurrentComponent } from '../routes/utils';
+import { useCurrentComponent, useCurrentIdentifier, useStudyId } from '../routes/utils';
 import { ResolutionWarning } from './interface/ResolutionWarning';
 import { useFetchStylesheet } from '../utils/fetchStylesheet';
 import { ScreenRecordingContext, useScreenRecording } from '../store/hooks/useScreenRecording';
 import { ScreenRecordingRejection } from './interface/ScreenRecordingRejection';
+import { lslMarkerClient } from '../lsl/lslClient';
 
 export function StepRenderer() {
   const windowEvents = useRef<EventType[]>([]);
+  const lastLslStartIdentifier = useRef<string | null>(null);
+  const lslContext = useRef({
+    studyId: '',
+    participantId: '',
+    currentComponent: '',
+    currentIdentifier: '',
+  });
   const dispatch = useStoreDispatch();
   const { toggleStudyBrowser } = useStoreActions();
 
   const isAnalysis = useIsAnalysis();
   const studyConfig = useStudyConfig();
   const currentComponent = useCurrentComponent();
+  const currentIdentifier = useCurrentIdentifier();
+  const studyId = useStudyId();
+  const participantId = useStoreSelector((state) => state.participantId);
+  const storedAnswer = useStoreSelector((state) => state.answers[currentIdentifier]);
 
   const componentConfig = useMemo(() => studyComponentToIndividualComponent(studyConfig.components[currentComponent] || {}, studyConfig), [currentComponent, studyConfig]);
 
@@ -41,6 +53,53 @@ export function StepRenderer() {
   const modes = useStoreSelector((state) => state.modes);
 
   const screenRecording = useScreenRecording();
+
+  useEffect(() => {
+    lslContext.current = {
+      studyId,
+      participantId,
+      currentComponent,
+      currentIdentifier,
+    };
+  }, [currentComponent, currentIdentifier, participantId, studyId]);
+
+  useEffect(() => {
+    lslMarkerClient.configure(studyConfig.uiConfig.lsl);
+  }, [studyConfig.uiConfig.lsl]);
+
+  useEffect(() => {
+    if (isAnalysis || !currentIdentifier || lastLslStartIdentifier.current === currentIdentifier) {
+      return;
+    }
+
+    lastLslStartIdentifier.current = currentIdentifier;
+    lslMarkerClient.send({
+      event: 'trial_start',
+      studyId,
+      participantId,
+      component: currentComponent,
+      identifier: currentIdentifier,
+      trialOrder: storedAnswer?.trialOrder,
+    });
+  }, [currentComponent, currentIdentifier, isAnalysis, participantId, storedAnswer?.trialOrder, studyId]);
+
+  useEffect(() => {
+    const sendUnloadMarker = () => {
+      lslMarkerClient.send({
+        event: 'study_unload',
+        studyId: lslContext.current.studyId,
+        participantId: lslContext.current.participantId,
+        component: lslContext.current.currentComponent,
+        identifier: lslContext.current.currentIdentifier,
+      });
+    };
+
+    window.addEventListener('beforeunload', sendUnloadMarker);
+
+    return () => {
+      window.removeEventListener('beforeunload', sendUnloadMarker);
+    };
+  }, []);
 
   const {
     isScreenRecording, screenWithAudioRecording, isRejected: isScreenRecordingUserRejected,

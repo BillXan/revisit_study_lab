@@ -21,6 +21,10 @@
     "withSidebar": true,
     "enumerateQuestions": true,
     "urlParticipantIdParam": "PROLIFIC_PID",
+    "lsl": {
+      "enabled": true,
+      "url": "ws://127.0.0.1:8765"
+    },
     "studyEndMsg": "Thank you for completing the study. Your responses have been saved. Please return to Prolific. Copy this Code: ** C1WQRRAE **",
     "numSequences": 150
   },
