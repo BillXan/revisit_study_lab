@@ -210,6 +210,7 @@ function el(tag, opts) {
 
 function logProv(action, trigger, data) {
   try { if (typeof Revisit !== 'undefined' && Revisit.logProvenance) { Revisit.logProvenance(action, trigger, data); } } catch (e) {}
+  try { if (typeof Revisit !== 'undefined' && Revisit.postEvent) { Revisit.postEvent(action, { trigger: trigger, data: data }); } } catch (e) {}
 }
 
 function addMsg(text, cls) {

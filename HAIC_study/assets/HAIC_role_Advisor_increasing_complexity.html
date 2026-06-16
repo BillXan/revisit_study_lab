@@ -209,6 +209,7 @@ function el(tag, opts) {
 
 function logProv(action, trigger, data) {
   try { if (typeof Revisit !== 'undefined' && Revisit.logProvenance) { Revisit.logProvenance(action, trigger, data); } } catch (e) {}
+  try { if (typeof Revisit !== 'undefined' && Revisit.postEvent) { Revisit.postEvent(action, { trigger: trigger, data: data }); } } catch (e) {}
 }
 
 function addMsg(text, cls) {
@@ -780,7 +781,7 @@ function sendToAdvisor(userMsg, isInitialRequest, rlSuggestion, requestToken) {
 
 /* === Event Bindings === */
 document.addEventListener("DOMContentLoaded", function() {
-  try { if (typeof Revisit !== 'undefined' && Revisit.initProvenance) { Revisit.initProvenance(); Revisit.logProvenance('pageLoaded', 'system', { userAgent: navigator.userAgent, timestamp: new Date().toISOString() }); } } catch (e) {}
+  try { if (typeof Revisit !== 'undefined' && Revisit.initProvenance) { Revisit.initProvenance(); logProv('pageLoaded', 'system', { userAgent: navigator.userAgent, timestamp: new Date().toISOString() }); } } catch (e) {}
 
   /* Start tracking */
   document.addEventListener("mousemove", trackMouseMovement);
