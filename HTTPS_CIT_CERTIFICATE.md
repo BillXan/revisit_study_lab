@@ -1,14 +1,22 @@
 # HTTPS Deployment With CIT/ITO Server Certificate
 
-This project can serve the study at:
+Use this on a CIT/LRZ VM when the study should be reachable through HTTPS, for example:
 
 ```text
-https://iivm6.cit.tum.de/HAIC_study/
+https://iivm7.cit.tum.de/HAIC_study/
 ```
 
-The repository contains the nginx and Docker configuration, but the certificate and private key must stay on the VM and must never be committed.
+The repository contains the Docker and nginx configuration. The certificate, CSR, and private key must be created and stored only on the VM. Never commit files from `certs/`.
 
-## 1. Firewall
+The CIT/ITO certificate request page was not reachable from this environment, so this document follows the same CSR-based server certificate flow already used for the other VM.
+
+## 1. DNS And Firewall
+
+Before requesting the certificate, make sure the VM has a fully qualified domain name, for example:
+
+```text
+iivm7.cit.tum.de
+```
 
 Ask LRZ/IT to keep these inbound ports open for the VM:
 
@@ -17,82 +25,100 @@ TCP 80
 TCP 443
 ```
 
-Port 80 is used for the HTTP-to-HTTPS redirect. Port 443 is used for HTTPS.
+Port 80 is used for the HTTP-to-HTTPS redirect. Port 443 serves the study over HTTPS.
 
-## 2. Create A Private Key And CSR On The VM
+## 2. Create Private Key And CSR On The VM
 
-Run this on the VM:
+Run this on the VM from the repository directory:
 
 ```bash
-cd ~/revisit_study
-mkdir -p certs
-chmod 700 certs
-
-openssl req -new -newkey rsa:3072 -nodes \
-  -keyout certs/iivm6.cit.tum.de.key \
-  -out certs/iivm6.cit.tum.de.csr \
-  -subj "/CN=iivm6.cit.tum.de" \
-  -addext "subjectAltName=DNS:iivm6.cit.tum.de"
-
-chmod 600 certs/iivm6.cit.tum.de.key
+chmod +x scripts/create-cit-csr.sh
+./scripts/create-cit-csr.sh iivm7.cit.tum.de
 ```
 
-Submit `certs/iivm6.cit.tum.de.csr` through the CIT/ITO server certificate process.
+Example:
 
-## 3. Install The Returned Certificate
+```bash
+./scripts/create-cit-csr.sh iivm7.cit.tum.de
+```
 
-After CIT/ITO returns the server certificate and intermediate chain, place them in `certs/`.
-
-The nginx config expects:
+This creates:
 
 ```text
-certs/iivm6.cit.tum.de.key
-certs/iivm6.cit.tum.de.fullchain.pem
+certs/iivm7.cit.tum.de.key
+certs/iivm7.cit.tum.de.csr
+certs/server.key -> iivm7.cit.tum.de.key
 ```
 
-If CIT/ITO gives you separate files, create the full chain by concatenating the server certificate first, then intermediate certificates:
+Submit `certs/iivm7.cit.tum.de.csr` through the CIT/ITO server certificate process.
+
+If the VM needs additional DNS names in the same certificate, pass them after the primary hostname:
 
 ```bash
-cat certs/iivm6.cit.tum.de.crt certs/intermediate-ca.pem > certs/iivm6.cit.tum.de.fullchain.pem
-chmod 600 certs/iivm6.cit.tum.de.key
-chmod 644 certs/iivm6.cit.tum.de.fullchain.pem
+./scripts/create-cit-csr.sh iivm7.cit.tum.de alias.cit.tum.de
 ```
 
-Adjust the file names in the command to match the files you receive.
+## 3. Install Returned Certificate
 
-## 4. Configure The Deployment Environment
+After CIT/ITO returns the server certificate and intermediate chain, copy the files to `certs/` on the VM.
+
+The HTTPS nginx config expects:
+
+```text
+certs/server.key
+certs/server.fullchain.pem
+```
+
+If CIT/ITO gives separate files, create the full chain by concatenating the server certificate first, then the intermediate certificates:
+
+```bash
+cat certs/iivm7.cit.tum.de.crt certs/intermediate-ca.pem > certs/server.fullchain.pem
+chmod 600 certs/server.key
+chmod 644 certs/server.fullchain.pem
+```
+
+Adjust the received file names as needed.
+
+## 4. Configure The VM Environment
 
 In the VM-local `.env.docker`, use:
 
 ```env
 STUDY_HTTP_PORT=80
 STUDY_HTTPS_PORT=443
-STUDY_PUBLIC_URL=https://iivm6.cit.tum.de
+STUDY_PUBLIC_URL=https://iivm7.cit.tum.de
 ```
 
-Keep your real `OPENROUTER_API_KEY` only in `.env.docker` on the VM.
+Example:
+
+```env
+STUDY_HTTP_PORT=80
+STUDY_HTTPS_PORT=443
+STUDY_PUBLIC_URL=https://iivm7.cit.tum.de
+```
+
+Keep real secrets, such as `OPENROUTER_API_KEY`, only in `.env.docker` on the VM.
 
 ## 5. Start HTTPS Deployment
 
 Use the HTTPS compose override:
 
 ```bash
-sudo docker-compose -f docker-compose.yml -f docker-compose.https.yml down
-sudo docker-compose -f docker-compose.yml -f docker-compose.https.yml up --build -d
+sudo docker compose -f docker-compose.yml -f docker-compose.https.yml up --build -d
 ```
 
-If your VM has the newer Docker Compose plugin, this also works:
+If the VM only has legacy Docker Compose:
 
 ```bash
-sudo docker compose -f docker-compose.yml -f docker-compose.https.yml up --build -d
+sudo docker-compose -f docker-compose.yml -f docker-compose.https.yml up --build -d
 ```
 
 ## 6. Test
 
 ```bash
-curl -I http://iivm6.cit.tum.de/HAIC_study/
-curl -I https://iivm6.cit.tum.de/HAIC_study/
-curl -I https://iivm6.cit.tum.de/api/health
+curl -I http://iivm7.cit.tum.de/HAIC_study/
+curl -I https://iivm7.cit.tum.de/HAIC_study/
+curl -I https://iivm7.cit.tum.de/api/health
 ```
 
 Expected:
@@ -105,5 +131,19 @@ HTTPS on port 443 -> 200 OK
 Participant URL:
 
 ```text
-https://iivm6.cit.tum.de/HAIC_study/?PROLIFIC_PID={{%PROLIFIC_PID%}}
+https://iivm7.cit.tum.de/HAIC_study/?PROLIFIC_PID={{%PROLIFIC_PID%}}
+```
+
+## 7. Renew Or Replace Certificate
+
+When renewing the certificate, keep the existing private key unless CIT/ITO requires a new one. If you receive a new server certificate and chain, replace only:
+
+```text
+certs/server.fullchain.pem
+```
+
+Then reload the deployment:
+
+```bash
+sudo docker compose -f docker-compose.yml -f docker-compose.https.yml restart study
 ```

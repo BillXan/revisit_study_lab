@@ -28,6 +28,8 @@ ALLOWED_STUDY_ORIGINS = {
     STUDY_PUBLIC_URL,
     "http://iivm6.cit.tum.de",
     "https://iivm6.cit.tum.de",
+    "http://iivm7.cit.tum.de",
+    "https://iivm7.cit.tum.de",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
 }
