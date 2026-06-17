@@ -98,15 +98,6 @@ export function GlobalConfigParser() {
             )}
             />
             <Route
-              path="/:studyId/*"
-              element={(
-                <>
-                  <PageTitle title="ReVISit | Study" />
-                  <Shell globalConfig={globalConfig} />
-                </>
-                )}
-            />
-            <Route
               path="/analysis/stats/:studyId/:analysisTab/:trialId?"
               element={(
                 <>
@@ -122,11 +113,20 @@ export function GlobalConfigParser() {
                     </AppShell>
                   </ProtectedRoute>
                 </>
-            )}
+                )}
             />
             <Route
               path="/analysis/stats/:studyId"
               element={<NavigateWithParams to="./summary" replace />}
+            />
+            <Route
+              path="/:studyId/*"
+              element={(
+                <>
+                  <PageTitle title="ReVISit | Study" />
+                  <Shell globalConfig={globalConfig} />
+                </>
+                )}
             />
             <Route
               path="/settings"
