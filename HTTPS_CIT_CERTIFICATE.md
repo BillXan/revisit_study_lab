@@ -131,7 +131,7 @@ HTTPS on port 443 -> 200 OK
 Participant URL:
 
 ```text
-https://iivm7.cit.tum.de/HAIC_study/?PROLIFIC_PID={{%PROLIFIC_PID%}}
+https://iivm7.cit.tum.de/HAIC_study/?Lab_participant_ID=LAB_001
 ```
 
 ## 7. Renew Or Replace Certificate

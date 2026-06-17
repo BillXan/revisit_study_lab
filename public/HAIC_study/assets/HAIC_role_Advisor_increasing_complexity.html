@@ -245,7 +245,7 @@ function registerApiMessage() {
 
 function getParticipantApiId() {
   var params = new URLSearchParams(window.location.search);
-  return params.get("PROLIFIC_PID") || params.get("participantId") || params.get("id") || "anonymous";
+  return params.get("Lab_participant_ID") || params.get("PROLIFIC_PID") || params.get("participantId") || params.get("id") || "anonymous";
 }
 
 function clearVisibleChat() {
