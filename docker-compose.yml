@@ -17,7 +17,6 @@ services:
       - "0.0.0.0:${STUDY_HTTP_PORT:-8080}:80"
     depends_on:
       - haic-api
-      - lsl-bridge
     restart: unless-stopped
 
   haic-api:
@@ -28,6 +27,8 @@ services:
     restart: unless-stopped
 
   lsl-bridge:
+    profiles:
+      - lsl-docker
     build:
       context: ./services/lsl_bridge
     environment:

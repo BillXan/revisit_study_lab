@@ -14,10 +14,10 @@ python3 -m pip install -r requirements.txt
 python3 app.py
 ```
 
-With Docker Compose:
+With Docker Compose, for development only:
 
 ```sh
-VITE_LSL_ENABLED=true docker compose up --build study lsl-bridge
+docker compose --profile lsl-docker up --build lsl-bridge
 ```
 
 Docker is convenient for the WebSocket endpoint, but native execution can be more reliable for LSL discovery because LSL uses multicast networking.
